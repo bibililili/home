@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>asymptos</title>
+<meta name="description" content="asymptos.com 的小项目入口">
+<style>
+:root {
+  --paper: #f2f4f6;
+  --sheet: #ffffff;
+  --ink: #18202a;
+  --muted: #5d6a77;
+  --rule: #d7dde3;
+  --up: #c4352b;
+  --down: #12845a;
+  --link: #2c4a9a;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #141a21;
+    --sheet: #1b232c;
+    --ink: #e4e9ee;
+    --muted: #93a0ad;
+    --rule: #2c3743;
+    --up: #ff6a5c;
+    --down: #3cc58c;
+    --link: #8fa8ee;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #141a21;
+  --sheet: #1b232c;
+  --ink: #e4e9ee;
+  --muted: #93a0ad;
+  --rule: #2c3743;
+  --up: #ff6a5c;
+  --down: #3cc58c;
+  --link: #8fa8ee;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+  line-height: 1.6;
+}
+.num { font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }
+.wrap { max-width: 640px; margin: 0 auto; padding: 64px 16px 48px; }
+
+/* 渐近线：名字的由来，也是页面唯一的装饰 */
+.mark { display: block; width: 100%; max-width: 360px; height: auto; margin: 0 0 18px; color: var(--muted); }
+.mark .curve { color: var(--ink); }
+h1 { margin: 0; font-size: 34px; font-weight: 650; letter-spacing: -0.01em; }
+.intro { margin: 6px 0 40px; color: var(--muted); font-size: 15px; }
+
+.projects { list-style: none; margin: 0; padding: 0; }
+.card {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  background: var(--sheet);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  padding: 18px 18px 16px;
+}
+.card:hover { border-color: var(--muted); }
+.card:focus-visible { outline: 2px solid var(--link); outline-offset: 3px; }
+.card-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.card h2 { margin: 0; font-size: 19px; font-weight: 650; }
+.card .host { font-size: 13px; color: var(--muted); }
+.card .what { margin: 2px 0 0; font-size: 14px; color: var(--muted); }
+
+.live { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--rule); }
+.live[hidden] { display: none; }
+.live .headline { margin: 0 0 10px; font-size: 15px; font-weight: 600; }
+.ticks { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px 12px; margin: 0; }
+.tick dt { font-size: 12px; color: var(--muted); }
+.tick dd { margin: 0; font-size: 15px; font-weight: 650; }
+.up { color: var(--up); }
+.down { color: var(--down); }
+.live .stamp { margin: 10px 0 0; font-size: 12px; color: var(--muted); }
+
+footer { margin-top: 48px; font-size: 13px; color: var(--muted); }
+
+@media (max-width: 420px) {
+  .wrap { padding-top: 40px; }
+}
+@media (max-width: 340px) {
+  .ticks { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <svg class="mark" viewBox="0 0 360 60" aria-hidden="true">
+    <line x1="0" y1="52" x2="360" y2="52" stroke="currentColor" stroke-width="1" stroke-dasharray="3 4"/>
+    <path class="curve" d="M8 4 C 30 40, 80 48, 360 51.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+  </svg>
+  <h1>asymptos</h1>
+  <p class="intro">一些自己做着玩的小东西。</p>
+
+  <ul class="projects">
+    <li>
+      <a class="card" href="https://stock.asymptos.com/">
+        <div class="card-head">
+          <h2>盘后指数</h2>
+          <span class="host">stock.asymptos.com</span>
+        </div>
+        <p class="what">A股与美股主要股指，每个交易日 16:20 左右更新。</p>
+        <div class="live" id="stock-live" hidden></div>
+      </a>
+    </li>
+  </ul>
+
+  <footer>数据整理自公开财经资讯，仅作个人研究记录，不构成投资建议。</footer>
+</main>
+
+<script>
+(function () {
+  var box = document.getElementById('stock-live');
+  var PICK = [['cn', '上证指数'], ['cn', '创业板指'], ['us', '纳斯达克']];
+
+  function esc(s) {
+    return String(s).replace(/[&<>"]/g, function (c) {
+      return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c];
+    });
+  }
+  function signed(n) {
+    var s = Math.abs(n).toFixed(2);
+    return (n > 0 ? '+' : n < 0 ? '−' : '') + s + '%';
+  }
+
+  // 读 stock 页面里的当日数据块，失败就只保留入口
+  fetch('https://stock.asymptos.com/', {cache: 'no-cache'})
+    .then(function (r) { if (!r.ok) throw new Error(r.status); return r.text(); })
+    .then(function (html) {
+      var doc = new DOMParser().parseFromString(html, 'text/html');
+      var node = doc.getElementById('market-data');
+      if (!node) throw new Error('no data');
+      var d = JSON.parse(node.textContent);
+      var cells = [];
+      PICK.forEach(function (p) {
+        var m = (d.markets || []).filter(function (x) { return x.id === p[0]; })[0];
+        if (!m) return;
+        var ix = m.indices.filter(function (i) { return i.name === p[1]; })[0];
+        if (!ix || typeof ix.pct !== 'number') return;
+        var cls = ix.pct > 0 ? 'up' : ix.pct < 0 ? 'down' : '';
+        cells.push('<div class="tick"><dt>' + esc(ix.name) + '</dt><dd class="num ' + cls + '">' + signed(ix.pct) + '</dd></div>');
+      });
+      box.innerHTML = '<p class="headline">' + esc(d.headline) + '</p>' +
+        (cells.length ? '<dl class="ticks">' + cells.join('') + '</dl>' : '') +
+        '<p class="stamp num">更新于 ' + esc(d.updated) + '</p>';
+      box.hidden = false;
+    })
+    .catch(function () { box.hidden = true; });
+})();
+</script>
+</body>
+</html>
