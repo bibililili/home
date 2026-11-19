@@ -57,7 +57,7 @@ body {
 h1 { margin: 0; font-size: 34px; font-weight: 650; letter-spacing: -0.01em; }
 .intro { margin: 6px 0 40px; color: var(--muted); font-size: 15px; }
 
-.projects { list-style: none; margin: 0; padding: 0; }
+.projects { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
 .card {
   display: block;
   text-decoration: none;
@@ -112,6 +112,15 @@ footer { margin-top: 48px; font-size: 13px; color: var(--muted); }
         </div>
         <p class="what">A股与美股主要股指、快讯和研报观点，每个交易日盘前、午间、收盘后各更新一次。</p>
         <div class="live" id="stock-live" hidden></div>
+      </a>
+    </li>
+    <li>
+      <a class="card" href="https://vps.asymptos.com/">
+        <div class="card-head">
+          <h2>个人云工作台</h2>
+          <span class="host">vps.asymptos.com</span>
+        </div>
+        <p class="what">个人云节点部署、流量监测、市场快照与常用工具箱（仅管理员登录可用）。</p>
       </a>
     </li>
   </ul>
